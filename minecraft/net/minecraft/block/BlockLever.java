@@ -86,8 +86,10 @@ public class BlockLever extends Block
         }
         else
         {
-            for (EnumFacing enumfacing : EnumFacing.Plane.HORIZONTAL)
+            for (Object enumfacing0 : EnumFacing.Plane.HORIZONTAL)
             {
+                EnumFacing enumfacing = (EnumFacing) enumfacing0;
+
                 if (enumfacing != facing && func_181090_a(worldIn, pos, enumfacing.getOpposite()))
                 {
                     return iblockstate.withProperty(FACING, BlockLever.EnumOrientation.forFacings(enumfacing, placer.getHorizontalFacing()));

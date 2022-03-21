@@ -212,8 +212,10 @@ public class WorldGenTrees extends WorldGenAbstractTree
                         {
                             for (int l3 = 0; l3 < 2; ++l3)
                             {
-                                for (EnumFacing enumfacing : EnumFacing.Plane.HORIZONTAL)
+                                for (Object enumfacing0 : EnumFacing.Plane.HORIZONTAL)
                                 {
+                                    EnumFacing enumfacing = (EnumFacing) enumfacing0;
+
                                     if (rand.nextInt(4 - l3) == 0)
                                     {
                                         EnumFacing enumfacing1 = enumfacing.getOpposite();

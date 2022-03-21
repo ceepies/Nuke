@@ -209,6 +209,8 @@ import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.MapData;
+import duke.Duke;
+import duke.modules.events.impl.EventSendPacket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -812,6 +814,16 @@ public class NetHandlerPlayClient implements INetHandlerPlayClient
     }
 
     public void addToSendQueue(Packet p_147297_1_)
+    {
+        EventSendPacket event = new EventSendPacket(p_147297_1_);
+        Duke.get().onEvent(event);
+        if(event.isCancelled()) {
+            return;
+        }
+        this.netManager.sendPacket(p_147297_1_);
+    }
+
+    public void sendQueueBypass(Packet p_147297_1_)
     {
         this.netManager.sendPacket(p_147297_1_);
     }

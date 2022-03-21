@@ -100,8 +100,10 @@ public class BlockTorch extends Block
         }
         else
         {
-            for (EnumFacing enumfacing : EnumFacing.Plane.HORIZONTAL)
+            for (Object enumfacing0 : EnumFacing.Plane.HORIZONTAL)
             {
+                EnumFacing enumfacing = (EnumFacing) enumfacing0;
+
                 if (worldIn.isBlockNormalCube(pos.offset(enumfacing.getOpposite()), true))
                 {
                     return this.getDefaultState().withProperty(FACING, enumfacing);

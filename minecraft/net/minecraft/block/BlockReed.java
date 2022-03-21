@@ -74,8 +74,10 @@ public class BlockReed extends Block
         }
         else
         {
-            for (EnumFacing enumfacing : EnumFacing.Plane.HORIZONTAL)
+            for (Object enumfacing0 : EnumFacing.Plane.HORIZONTAL)
             {
+                EnumFacing enumfacing = (EnumFacing) enumfacing0;
+
                 if (worldIn.getBlockState(pos.offset(enumfacing).down()).getBlock().getMaterial() == Material.water)
                 {
                     return true;

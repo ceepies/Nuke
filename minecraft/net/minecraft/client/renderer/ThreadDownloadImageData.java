@@ -26,6 +26,8 @@ public class ThreadDownloadImageData extends SimpleTexture
     private BufferedImage bufferedImage;
     private Thread imageThread;
     private boolean textureUploaded;
+    private static final String __OBFID = "CL_00001049";
+    public Boolean imageFound = null;
 
     public ThreadDownloadImageData(File cacheFileIn, String imageUrlIn, ResourceLocation textureResourceLocation, IImageBuffer imageBufferIn)
     {
@@ -37,18 +39,15 @@ public class ThreadDownloadImageData extends SimpleTexture
 
     private void checkTextureUploaded()
     {
-        if (!this.textureUploaded)
+        if (!this.textureUploaded && this.bufferedImage != null)
         {
-            if (this.bufferedImage != null)
+            if (this.textureLocation != null)
             {
-                if (this.textureLocation != null)
-                {
-                    this.deleteGlTexture();
-                }
-
-                TextureUtil.uploadTextureImage(super.getGlTextureId(), this.bufferedImage);
-                this.textureUploaded = true;
+                this.deleteGlTexture();
             }
+
+            TextureUtil.uploadTextureImage(super.getGlTextureId(), this.bufferedImage);
+            this.textureUploaded = true;
         }
     }
 
@@ -66,6 +65,8 @@ public class ThreadDownloadImageData extends SimpleTexture
         {
             this.imageBuffer.skinAvailable();
         }
+
+        this.imageFound = Boolean.valueOf(this.bufferedImage != null);
     }
 
     public void loadTexture(IResourceManager resourceManager) throws IOException
@@ -89,6 +90,8 @@ public class ThreadDownloadImageData extends SimpleTexture
                     {
                         this.setBufferedImage(this.imageBuffer.parseUserSkin(this.bufferedImage));
                     }
+
+                    this.imageFound = Boolean.valueOf(this.bufferedImage != null);
                 }
                 catch (IOException ioexception)
                 {
@@ -107,6 +110,7 @@ public class ThreadDownloadImageData extends SimpleTexture
     {
         this.imageThread = new Thread("Texture Downloader #" + threadDownloadCounter.incrementAndGet())
         {
+            private static final String __OBFID = "CL_00001050";
             public void run()
             {
                 HttpURLConnection httpurlconnection = null;
@@ -119,28 +123,29 @@ public class ThreadDownloadImageData extends SimpleTexture
                     httpurlconnection.setDoOutput(false);
                     httpurlconnection.connect();
 
-                    if (httpurlconnection.getResponseCode() / 100 == 2)
+                    if (httpurlconnection.getResponseCode() / 100 != 2)
                     {
-                        BufferedImage bufferedimage;
-
-                        if (ThreadDownloadImageData.this.cacheFile != null)
-                        {
-                            FileUtils.copyInputStreamToFile(httpurlconnection.getInputStream(), ThreadDownloadImageData.this.cacheFile);
-                            bufferedimage = ImageIO.read(ThreadDownloadImageData.this.cacheFile);
-                        }
-                        else
-                        {
-                            bufferedimage = TextureUtil.readBufferedImage(httpurlconnection.getInputStream());
-                        }
-
-                        if (ThreadDownloadImageData.this.imageBuffer != null)
-                        {
-                            bufferedimage = ThreadDownloadImageData.this.imageBuffer.parseUserSkin(bufferedimage);
-                        }
-
-                        ThreadDownloadImageData.this.setBufferedImage(bufferedimage);
                         return;
                     }
+
+                    BufferedImage bufferedimage;
+
+                    if (ThreadDownloadImageData.this.cacheFile != null)
+                    {
+                        FileUtils.copyInputStreamToFile(httpurlconnection.getInputStream(), ThreadDownloadImageData.this.cacheFile);
+                        bufferedimage = ImageIO.read(ThreadDownloadImageData.this.cacheFile);
+                    }
+                    else
+                    {
+                        bufferedimage = TextureUtil.readBufferedImage(httpurlconnection.getInputStream());
+                    }
+
+                    if (ThreadDownloadImageData.this.imageBuffer != null)
+                    {
+                        bufferedimage = ThreadDownloadImageData.this.imageBuffer.parseUserSkin(bufferedimage);
+                    }
+
+                    ThreadDownloadImageData.this.setBufferedImage(bufferedimage);
                 }
                 catch (Exception exception)
                 {
@@ -153,6 +158,8 @@ public class ThreadDownloadImageData extends SimpleTexture
                     {
                         httpurlconnection.disconnect();
                     }
+
+                    ThreadDownloadImageData.this.imageFound = Boolean.valueOf(ThreadDownloadImageData.this.bufferedImage != null);
                 }
             }
         };

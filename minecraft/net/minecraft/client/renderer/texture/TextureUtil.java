@@ -1,6 +1,7 @@
 package net.minecraft.client.renderer.texture;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.IntBuffer;
@@ -10,9 +11,13 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
+import optfine.Config;
+import optfine.Mipmaps;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL12;
@@ -24,6 +29,7 @@ public class TextureUtil
     public static final DynamicTexture missingTexture = new DynamicTexture(16, 16);
     public static final int[] missingTextureData = missingTexture.getTextureData();
     private static final int[] mipmapBuffer;
+    private static final String __OBFID = "CL_00001067";
 
     public static int glGenTextures()
     {
@@ -97,52 +103,7 @@ public class TextureUtil
 
     private static int blendColors(int p_147943_0_, int p_147943_1_, int p_147943_2_, int p_147943_3_, boolean p_147943_4_)
     {
-        if (!p_147943_4_)
-        {
-            int i1 = blendColorComponent(p_147943_0_, p_147943_1_, p_147943_2_, p_147943_3_, 24);
-            int j1 = blendColorComponent(p_147943_0_, p_147943_1_, p_147943_2_, p_147943_3_, 16);
-            int k1 = blendColorComponent(p_147943_0_, p_147943_1_, p_147943_2_, p_147943_3_, 8);
-            int l1 = blendColorComponent(p_147943_0_, p_147943_1_, p_147943_2_, p_147943_3_, 0);
-            return i1 << 24 | j1 << 16 | k1 << 8 | l1;
-        }
-        else
-        {
-            mipmapBuffer[0] = p_147943_0_;
-            mipmapBuffer[1] = p_147943_1_;
-            mipmapBuffer[2] = p_147943_2_;
-            mipmapBuffer[3] = p_147943_3_;
-            float f = 0.0F;
-            float f1 = 0.0F;
-            float f2 = 0.0F;
-            float f3 = 0.0F;
-
-            for (int i = 0; i < 4; ++i)
-            {
-                if (mipmapBuffer[i] >> 24 != 0)
-                {
-                    f += (float)Math.pow((double)((float)(mipmapBuffer[i] >> 24 & 255) / 255.0F), 2.2D);
-                    f1 += (float)Math.pow((double)((float)(mipmapBuffer[i] >> 16 & 255) / 255.0F), 2.2D);
-                    f2 += (float)Math.pow((double)((float)(mipmapBuffer[i] >> 8 & 255) / 255.0F), 2.2D);
-                    f3 += (float)Math.pow((double)((float)(mipmapBuffer[i] >> 0 & 255) / 255.0F), 2.2D);
-                }
-            }
-
-            f = f / 4.0F;
-            f1 = f1 / 4.0F;
-            f2 = f2 / 4.0F;
-            f3 = f3 / 4.0F;
-            int i2 = (int)(Math.pow((double)f, 0.45454545454545453D) * 255.0D);
-            int j = (int)(Math.pow((double)f1, 0.45454545454545453D) * 255.0D);
-            int k = (int)(Math.pow((double)f2, 0.45454545454545453D) * 255.0D);
-            int l = (int)(Math.pow((double)f3, 0.45454545454545453D) * 255.0D);
-
-            if (i2 < 96)
-            {
-                i2 = 0;
-            }
-
-            return i2 << 24 | j << 16 | k << 8 | l;
-        }
+        return Mipmaps.alphaBlend(p_147943_0_, p_147943_1_, p_147943_2_, p_147943_3_);
     }
 
     private static int blendColorComponent(int p_147944_0_, int p_147944_1_, int p_147944_2_, int p_147944_3_, int p_147944_4_)
@@ -169,15 +130,15 @@ public class TextureUtil
         int i = 4194304 / p_147947_2_;
         setTextureBlurMipmap(p_147947_6_, p_147947_8_);
         setTextureClamped(p_147947_7_);
-        int l;
+        int j;
 
-        for (int j = 0; j < p_147947_2_ * p_147947_3_; j += p_147947_2_ * l)
+        for (int k = 0; k < p_147947_2_ * p_147947_3_; k += p_147947_2_ * j)
         {
-            int k = j / p_147947_2_;
-            l = Math.min(i, p_147947_3_ - k);
-            int i1 = p_147947_2_ * l;
-            copyToBufferPos(p_147947_1_, j, i1);
-            GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, p_147947_0_, p_147947_4_, p_147947_5_ + k, p_147947_2_, l, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, (IntBuffer)dataBuffer);
+            int l = k / p_147947_2_;
+            j = Math.min(i, p_147947_3_ - l);
+            int i1 = p_147947_2_ * j;
+            copyToBufferPos(p_147947_1_, k, i1);
+            GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, p_147947_0_, p_147947_4_, p_147947_5_ + l, p_147947_2_, j, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, (IntBuffer)dataBuffer);
         }
     }
 
@@ -242,8 +203,8 @@ public class TextureUtil
     {
         if (p_110997_0_)
         {
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
         }
         else
         {
@@ -266,7 +227,8 @@ public class TextureUtil
         }
         else
         {
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, p_147954_1_ ? GL11.GL_NEAREST_MIPMAP_LINEAR : GL11.GL_NEAREST);
+            int i = Config.getMipmapType();
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, p_147954_1_ ? i : GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
         }
     }
@@ -343,6 +305,37 @@ public class TextureUtil
         int j1 = (j * 30 + k * 70) / 100;
         int k1 = (j * 30 + l * 70) / 100;
         return i << 24 | i1 << 16 | j1 << 8 | k1;
+    }
+
+    public static void saveGlTexture(String p_saveGlTexture_0_, int p_saveGlTexture_1_, int p_saveGlTexture_2_, int p_saveGlTexture_3_, int p_saveGlTexture_4_)
+    {
+        bindTexture(p_saveGlTexture_1_);
+        GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
+        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
+
+        for (int i = 0; i <= p_saveGlTexture_2_; ++i)
+        {
+            File file1 = new File(p_saveGlTexture_0_ + "_" + i + ".png");
+            int j = p_saveGlTexture_3_ >> i;
+            int k = p_saveGlTexture_4_ >> i;
+            int l = j * k;
+            IntBuffer intbuffer = BufferUtils.createIntBuffer(l);
+            int[] aint = new int[l];
+            GL11.glGetTexImage(GL11.GL_TEXTURE_2D, i, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, (IntBuffer)intbuffer);
+            intbuffer.get(aint);
+            BufferedImage bufferedimage = new BufferedImage(j, k, 2);
+            bufferedimage.setRGB(0, 0, j, k, aint, 0, j);
+
+            try
+            {
+                ImageIO.write(bufferedimage, "png", (File)file1);
+                logger.debug("Exported png to: {}", new Object[] {file1.getAbsolutePath()});
+            }
+            catch (Exception exception)
+            {
+                logger.debug((String)"Unable to write: ", (Throwable)exception);
+            }
+        }
     }
 
     public static void processPixelValues(int[] p_147953_0_, int p_147953_1_, int p_147953_2_)

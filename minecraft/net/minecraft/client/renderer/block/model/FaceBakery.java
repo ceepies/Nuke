@@ -14,6 +14,7 @@ public class FaceBakery
 {
     private static final float field_178418_a = 1.0F / (float)Math.cos(0.39269909262657166D) - 1.0F;
     private static final float field_178417_b = 1.0F / (float)Math.cos((Math.PI / 4D)) - 1.0F;
+    private static final String __OBFID = "CL_00002490";
 
     public BakedQuad makeBakedQuad(Vector3f posFrom, Vector3f posTo, BlockPartFace face, TextureAtlasSprite sprite, EnumFacing facing, ModelRotation modelRotationIn, BlockPartRotation partRotation, boolean uvLocked, boolean shade)
     {
@@ -30,7 +31,7 @@ public class FaceBakery
             this.func_178408_a(aint, enumfacing);
         }
 
-        return new BakedQuad(aint, face.tintIndex, enumfacing);
+        return new BakedQuad(aint, face.tintIndex, enumfacing, sprite);
     }
 
     private int[] makeQuadVertexData(BlockPartFace partFace, TextureAtlasSprite sprite, EnumFacing facing, float[] p_178405_4_, ModelRotation modelRotationIn, BlockPartRotation partRotation, boolean uvLocked, boolean shade)
@@ -54,20 +55,20 @@ public class FaceBakery
 
     private float getFaceBrightness(EnumFacing facing)
     {
-        switch (facing)
+        switch (FaceBakery.FaceBakery$1.field_178400_a[facing.ordinal()])
         {
-            case DOWN:
+            case 1:
                 return 0.5F;
 
-            case UP:
+            case 2:
                 return 1.0F;
 
-            case NORTH:
-            case SOUTH:
+            case 3:
+            case 4:
                 return 0.8F;
 
-            case WEST:
-            case EAST:
+            case 5:
+            case 6:
                 return 0.6F;
 
             default:
@@ -116,19 +117,19 @@ public class FaceBakery
             Matrix4f matrix4f = this.getMatrixIdentity();
             Vector3f vector3f = new Vector3f(0.0F, 0.0F, 0.0F);
 
-            switch (partRotation.axis)
+            switch (FaceBakery.FaceBakery$1.field_178399_b[partRotation.axis.ordinal()])
             {
-                case X:
+                case 1:
                     Matrix4f.rotate(partRotation.angle * 0.017453292F, new Vector3f(1.0F, 0.0F, 0.0F), matrix4f, matrix4f);
                     vector3f.set(0.0F, 1.0F, 1.0F);
                     break;
 
-                case Y:
+                case 2:
                     Matrix4f.rotate(partRotation.angle * 0.017453292F, new Vector3f(0.0F, 1.0F, 0.0F), matrix4f, matrix4f);
                     vector3f.set(1.0F, 0.0F, 1.0F);
                     break;
 
-                case Z:
+                case 3:
                     Matrix4f.rotate(partRotation.angle * 0.017453292F, new Vector3f(0.0F, 0.0F, 1.0F), matrix4f, matrix4f);
                     vector3f.set(1.0F, 1.0F, 0.0F);
             }
@@ -216,14 +217,19 @@ public class FaceBakery
             }
         }
 
-        if (enumfacing == null)
+        if (f1 < 0.719F)
         {
-            return EnumFacing.UP;
+            if (enumfacing != EnumFacing.EAST && enumfacing != EnumFacing.WEST && enumfacing != EnumFacing.NORTH && enumfacing != EnumFacing.SOUTH)
+            {
+                enumfacing = EnumFacing.UP;
+            }
+            else
+            {
+                enumfacing = EnumFacing.NORTH;
+            }
         }
-        else
-        {
-            return enumfacing;
-        }
+
+        return enumfacing == null ? EnumFacing.UP : enumfacing;
     }
 
     public void func_178409_a(int[] p_178409_1_, EnumFacing facing, BlockFaceUV p_178409_3_, TextureAtlasSprite p_178409_4_)
@@ -246,41 +252,41 @@ public class FaceBakery
         afloat[EnumFaceDirection.Constants.UP_INDEX] = -999.0F;
         afloat[EnumFaceDirection.Constants.SOUTH_INDEX] = -999.0F;
 
-        for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
         {
-            int j = 7 * i;
-            float f = Float.intBitsToFloat(aint[j]);
-            float f1 = Float.intBitsToFloat(aint[j + 1]);
-            float f2 = Float.intBitsToFloat(aint[j + 2]);
+            int i = 7 * j;
+            float f1 = Float.intBitsToFloat(aint[i]);
+            float f2 = Float.intBitsToFloat(aint[i + 1]);
+            float f = Float.intBitsToFloat(aint[i + 2]);
 
-            if (f < afloat[EnumFaceDirection.Constants.WEST_INDEX])
+            if (f1 < afloat[EnumFaceDirection.Constants.WEST_INDEX])
             {
-                afloat[EnumFaceDirection.Constants.WEST_INDEX] = f;
+                afloat[EnumFaceDirection.Constants.WEST_INDEX] = f1;
             }
 
-            if (f1 < afloat[EnumFaceDirection.Constants.DOWN_INDEX])
+            if (f2 < afloat[EnumFaceDirection.Constants.DOWN_INDEX])
             {
-                afloat[EnumFaceDirection.Constants.DOWN_INDEX] = f1;
+                afloat[EnumFaceDirection.Constants.DOWN_INDEX] = f2;
             }
 
-            if (f2 < afloat[EnumFaceDirection.Constants.NORTH_INDEX])
+            if (f < afloat[EnumFaceDirection.Constants.NORTH_INDEX])
             {
-                afloat[EnumFaceDirection.Constants.NORTH_INDEX] = f2;
+                afloat[EnumFaceDirection.Constants.NORTH_INDEX] = f;
             }
 
-            if (f > afloat[EnumFaceDirection.Constants.EAST_INDEX])
+            if (f1 > afloat[EnumFaceDirection.Constants.EAST_INDEX])
             {
-                afloat[EnumFaceDirection.Constants.EAST_INDEX] = f;
+                afloat[EnumFaceDirection.Constants.EAST_INDEX] = f1;
             }
 
-            if (f1 > afloat[EnumFaceDirection.Constants.UP_INDEX])
+            if (f2 > afloat[EnumFaceDirection.Constants.UP_INDEX])
             {
-                afloat[EnumFaceDirection.Constants.UP_INDEX] = f1;
+                afloat[EnumFaceDirection.Constants.UP_INDEX] = f2;
             }
 
-            if (f2 > afloat[EnumFaceDirection.Constants.SOUTH_INDEX])
+            if (f > afloat[EnumFaceDirection.Constants.SOUTH_INDEX])
             {
-                afloat[EnumFaceDirection.Constants.SOUTH_INDEX] = f2;
+                afloat[EnumFaceDirection.Constants.SOUTH_INDEX] = f;
             }
         }
 
@@ -338,34 +344,34 @@ public class FaceBakery
         float f3 = 0.0F;
         float f4 = 0.0F;
 
-        switch (facing)
+        switch (FaceBakery.FaceBakery$1.field_178400_a[facing.ordinal()])
         {
-            case DOWN:
+            case 1:
                 f3 = f * 16.0F;
                 f4 = (1.0F - f2) * 16.0F;
                 break;
 
-            case UP:
+            case 2:
                 f3 = f * 16.0F;
                 f4 = f2 * 16.0F;
                 break;
 
-            case NORTH:
+            case 3:
                 f3 = (1.0F - f) * 16.0F;
                 f4 = (1.0F - f1) * 16.0F;
                 break;
 
-            case SOUTH:
+            case 4:
                 f3 = f * 16.0F;
                 f4 = (1.0F - f1) * 16.0F;
                 break;
 
-            case WEST:
+            case 5:
                 f3 = f2 * 16.0F;
                 f4 = (1.0F - f1) * 16.0F;
                 break;
 
-            case EAST:
+            case 6:
                 f3 = (1.0F - f2) * 16.0F;
                 f4 = (1.0F - f1) * 16.0F;
         }
@@ -373,5 +379,98 @@ public class FaceBakery
         int j = p_178401_4_.func_178345_c(p_178401_1_) * 7;
         p_178401_2_[j + 4] = Float.floatToRawIntBits(p_178401_5_.getInterpolatedU((double)f3));
         p_178401_2_[j + 4 + 1] = Float.floatToRawIntBits(p_178401_5_.getInterpolatedV((double)f4));
+    }
+
+    static final class FaceBakery$1
+    {
+        static final int[] field_178400_a;
+        static final int[] field_178399_b = new int[EnumFacing.Axis.values().length];
+        private static final String __OBFID = "CL_00002489";
+
+        static
+        {
+            try
+            {
+                field_178399_b[EnumFacing.Axis.X.ordinal()] = 1;
+            }
+            catch (NoSuchFieldError var9)
+            {
+                ;
+            }
+
+            try
+            {
+                field_178399_b[EnumFacing.Axis.Y.ordinal()] = 2;
+            }
+            catch (NoSuchFieldError var8)
+            {
+                ;
+            }
+
+            try
+            {
+                field_178399_b[EnumFacing.Axis.Z.ordinal()] = 3;
+            }
+            catch (NoSuchFieldError var7)
+            {
+                ;
+            }
+
+            field_178400_a = new int[EnumFacing.values().length];
+
+            try
+            {
+                field_178400_a[EnumFacing.DOWN.ordinal()] = 1;
+            }
+            catch (NoSuchFieldError var6)
+            {
+                ;
+            }
+
+            try
+            {
+                field_178400_a[EnumFacing.UP.ordinal()] = 2;
+            }
+            catch (NoSuchFieldError var5)
+            {
+                ;
+            }
+
+            try
+            {
+                field_178400_a[EnumFacing.NORTH.ordinal()] = 3;
+            }
+            catch (NoSuchFieldError var4)
+            {
+                ;
+            }
+
+            try
+            {
+                field_178400_a[EnumFacing.SOUTH.ordinal()] = 4;
+            }
+            catch (NoSuchFieldError var3)
+            {
+                ;
+            }
+
+            try
+            {
+                field_178400_a[EnumFacing.WEST.ordinal()] = 5;
+            }
+            catch (NoSuchFieldError var2)
+            {
+                ;
+            }
+
+            try
+            {
+                field_178400_a[EnumFacing.EAST.ordinal()] = 6;
+            }
+            catch (NoSuchFieldError var1)
+            {
+                ;
+            }
+        }
     }
 }

@@ -42,6 +42,8 @@ import net.minecraft.util.MessageDeserializer;
 import net.minecraft.util.MessageDeserializer2;
 import net.minecraft.util.MessageSerializer;
 import net.minecraft.util.MessageSerializer2;
+import duke.Duke;
+import duke.modules.events.impl.EventReceivePacket;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -152,6 +154,9 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
         {
             try
             {
+                EventReceivePacket event = new EventReceivePacket(p_channelRead0_2_);
+                Duke.get().onEvent(event);
+                if(event.isCancelled()) return;
                 p_channelRead0_2_.processPacket(this.packetListener);
             }
             catch (ThreadQuickExitException var4)

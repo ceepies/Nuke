@@ -34,6 +34,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.SaveDataMemoryStorage;
 import net.minecraft.world.storage.SaveHandlerMP;
 import net.minecraft.world.storage.WorldInfo;
+import optfine.BlockPosM;
 
 public class WorldClient extends World
 {
@@ -42,18 +43,27 @@ public class WorldClient extends World
 
     /** The ChunkProviderClient instance */
     private ChunkProviderClient clientChunkProvider;
-    private final Set<Entity> entityList = Sets.<Entity>newHashSet();
-    private final Set<Entity> entitySpawnQueue = Sets.<Entity>newHashSet();
+
+    /** Contains all entities for this client, both spawned and non-spawned. */
+    private final Set entityList = Sets.newHashSet();
+
+    /**
+     * Contains all entities for this client that were not spawned due to a non-present chunk. The game will attempt to
+     * spawn up to 10 pending entities with each subsequent tick until the spawn queue is empty.
+     */
+    private final Set entitySpawnQueue = Sets.newHashSet();
     private final Minecraft mc = Minecraft.getMinecraft();
-    private final Set<ChunkCoordIntPair> previousActiveChunkSet = Sets.<ChunkCoordIntPair>newHashSet();
+    private final Set previousActiveChunkSet = Sets.newHashSet();
+    private static final String __OBFID = "CL_00000882";
+    private BlockPosM randomTickPosM = new BlockPosM(0, 0, 0, 3);
 
     public WorldClient(NetHandlerPlayClient p_i45063_1_, WorldSettings p_i45063_2_, int p_i45063_3_, EnumDifficulty p_i45063_4_, Profiler p_i45063_5_)
     {
         super(new SaveHandlerMP(), new WorldInfo(p_i45063_2_, "MpServer"), WorldProvider.getProviderForDimension(p_i45063_3_), p_i45063_5_, true);
         this.sendQueue = p_i45063_1_;
         this.getWorldInfo().setDifficulty(p_i45063_4_);
-        this.setSpawnPoint(new BlockPos(8, 64, 8));
         this.provider.registerWorld(this);
+        this.setSpawnPoint(new BlockPos(8, 64, 8));
         this.chunkProvider = this.createChunkProvider();
         this.mapStorage = new SaveDataMemoryStorage();
         this.calculateInitialSkylight();
@@ -293,24 +303,24 @@ public class WorldClient extends World
 
     public void doVoidFogParticles(int p_73029_1_, int p_73029_2_, int p_73029_3_)
     {
-        int i = 16;
+        byte b0 = 16;
         Random random = new Random();
         ItemStack itemstack = this.mc.thePlayer.getHeldItem();
         boolean flag = this.mc.playerController.getCurrentGameType() == WorldSettings.GameType.CREATIVE && itemstack != null && Block.getBlockFromItem(itemstack.getItem()) == Blocks.barrier;
-        BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+        BlockPosM blockposm = this.randomTickPosM;
 
-        for (int j = 0; j < 1000; ++j)
+        for (int i = 0; i < 1000; ++i)
         {
-            int k = p_73029_1_ + this.rand.nextInt(i) - this.rand.nextInt(i);
-            int l = p_73029_2_ + this.rand.nextInt(i) - this.rand.nextInt(i);
-            int i1 = p_73029_3_ + this.rand.nextInt(i) - this.rand.nextInt(i);
-            blockpos$mutableblockpos.func_181079_c(k, l, i1);
-            IBlockState iblockstate = this.getBlockState(blockpos$mutableblockpos);
-            iblockstate.getBlock().randomDisplayTick(this, blockpos$mutableblockpos, iblockstate, random);
+            int j = p_73029_1_ + this.rand.nextInt(b0) - this.rand.nextInt(b0);
+            int k = p_73029_2_ + this.rand.nextInt(b0) - this.rand.nextInt(b0);
+            int l = p_73029_3_ + this.rand.nextInt(b0) - this.rand.nextInt(b0);
+            blockposm.setXyz(j, k, l);
+            IBlockState iblockstate = this.getBlockState(blockposm);
+            iblockstate.getBlock().randomDisplayTick(this, blockposm, iblockstate, random);
 
             if (flag && iblockstate.getBlock() == Blocks.barrier)
             {
-                this.spawnParticle(EnumParticleTypes.BARRIER, (double)((float)k + 0.5F), (double)((float)l + 0.5F), (double)((float)i1 + 0.5F), 0.0D, 0.0D, 0.0D, new int[0]);
+                this.spawnParticle(EnumParticleTypes.BARRIER, (double)((float)j + 0.5F), (double)((float)k + 0.5F), (double)((float)l + 0.5F), 0.0D, 0.0D, 0.0D, new int[0]);
             }
         }
     }
@@ -378,29 +388,33 @@ public class WorldClient extends World
     public CrashReportCategory addWorldInfoToCrashReport(CrashReport report)
     {
         CrashReportCategory crashreportcategory = super.addWorldInfoToCrashReport(report);
-        crashreportcategory.addCrashSectionCallable("Forced entities", new Callable<String>()
+        crashreportcategory.addCrashSectionCallable("Forced entities", new Callable()
         {
+            private static final String __OBFID = "CL_00000883";
             public String call()
             {
                 return WorldClient.this.entityList.size() + " total; " + WorldClient.this.entityList.toString();
             }
         });
-        crashreportcategory.addCrashSectionCallable("Retry entities", new Callable<String>()
+        crashreportcategory.addCrashSectionCallable("Retry entities", new Callable()
         {
+            private static final String __OBFID = "CL_00000884";
             public String call()
             {
                 return WorldClient.this.entitySpawnQueue.size() + " total; " + WorldClient.this.entitySpawnQueue.toString();
             }
         });
-        crashreportcategory.addCrashSectionCallable("Server brand", new Callable<String>()
+        crashreportcategory.addCrashSectionCallable("Server brand", new Callable()
         {
+            private static final String __OBFID = "CL_00000885";
             public String call() throws Exception
             {
                 return WorldClient.this.mc.thePlayer.getClientBrand();
             }
         });
-        crashreportcategory.addCrashSectionCallable("Server type", new Callable<String>()
+        crashreportcategory.addCrashSectionCallable("Server type", new Callable()
         {
+            private static final String __OBFID = "CL_00000886";
             public String call() throws Exception
             {
                 return WorldClient.this.mc.getIntegratedServer() == null ? "Non-integrated multiplayer server" : "Integrated singleplayer server";
